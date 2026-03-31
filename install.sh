@@ -30,7 +30,7 @@ VPS_NAME=${INPUT_VPS_NAME:-$DEFAULT_HOSTNAME}
 
 # [1.2] 获取 API URL
 echo -e "\n${YELLOW}请输入 Cloudflare Worker URL 或 TG API 地址:${NC}"
-echo -e "(例如: my-notify-bot.abc.workers.dev)"
+echo -e "(例如: https://my-notify-bot.abc.workers.dev)"
 read -p "URL: " CF_WORKER_URL
 
 while [ -z "$CF_WORKER_URL" ]; do
