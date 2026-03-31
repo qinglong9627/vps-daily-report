@@ -1,4 +1,4 @@
-# 🚀 VPS 智能监控一键安装脚本
+# 🚀 VPS 智能监控一键安装脚本（个人使用，未测试，勿用，缺少workers代码）
 
 一个基于 **Bash** 的轻量级 VPS 监控脚本，支持 **异常告警**、**每日日报**、**自定义定时任务**，并可将通知推送到你的 Cloudflare Worker / TG API。
 
@@ -364,6 +364,29 @@ rm -f /etc/vps_monitor.conf
 ```
 
 ---
+## 🗑️ 一键彻底卸载
+
+如果你不想继续使用这个监控脚本，想把 **脚本文件、配置文件、日志文件，以及定时任务** 一次性清除干净，直接复制下面这条命令执行即可：
+
+```bash
+rm -f /usr/local/bin/vps_monitor.sh /etc/vps_monitor.conf /root/cpu_snapshot.log && \
+crontab -l 2>/dev/null | grep -v "vps_monitor.sh" > /tmp/clean_cron && \
+crontab /tmp/clean_cron && rm -f /tmp/clean_cron && \
+echo -e "\033[0;32m✅ 监控脚本、配置文件、日志及定时任务已全部彻底删除，干干净净！\033[0m"
+```
+
+### 📌 这条命令会做什么
+
+- 🧹 `rm -f ...`：强制删除核心监控脚本、配置文件，以及日志文件 `/root/cpu_snapshot.log`
+- ⏰ `crontab -l | grep -v ...`：读取当前定时任务列表，精准移除包含 `vps_monitor.sh` 的任务，不影响你服务器上的其他 cron 任务
+- ✅ `echo ...`：在终端输出绿色提示，告诉你卸载已经完成
+
+### ⚠️ 注意事项
+
+- 这个操作会删除监控相关文件，执行后无法恢复
+- 如果你改过脚本路径或日志路径，请按你的实际路径调整命令
+- 建议使用 `root` 用户执行，避免因为权限不足导致删除不完整
+
 
 ## 📄 License
 
