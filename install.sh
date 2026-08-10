@@ -107,7 +107,7 @@ CF_WORKER_URL="$CF_WORKER_URL"
 EOF
 
 # ---------------------------------------------------
-# 3. 生成核心监控脚本 (代码保持不变)
+# 3. 生成核心监控脚本 (代码保持不变，增加了夜间免打扰模式)
 # ---------------------------------------------------
 echo -e "${CYAN}[2/4] 正在生成核心监控脚本到 ${SCRIPT_FILE}...${NC}"
 
@@ -267,6 +267,18 @@ else
     JSON_PAYLOAD="{\"text\":\"$ESCAPED_MSG\"}"
 fi
 
+################ 夜间免打扰模式 ################
+# 如果当前是在巡检模式下触发了告警（非手动测试或日报模式）
+if [ "$HEALTH_MODE" -eq 0 ]; then
+    CURRENT_HOUR=$(date +%H)
+    CURRENT_HOUR=$((10#$CURRENT_HOUR))
+    # 判断当前时间是否在 00:00 到 06:59 之间
+    if [ "$CURRENT_HOUR" -ge 0 ] && [ "$CURRENT_HOUR" -lt 7 ]; then
+        echo "Current time is ${CURRENT_HOUR}:xx, night quiet mode activated. Alert notification skipped."
+        exit 0
+    fi
+fi
+
 ################ 发送 ################
 HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
     --max-time 10 -X POST "$CF_WORKER_URL" \
@@ -296,6 +308,8 @@ crontab -l 2>/dev/null | grep -v "$SCRIPT_FILE" > /tmp/current_cron
 # 添加新任务：使用用户自定义的时间
 echo "${CRON_MON} $SCRIPT_FILE >/dev/null 2>&1" >> /tmp/current_cron
 echo "${CRON_REPORT} $SCRIPT_FILE report >/dev/null 2>&1" >> /tmp/current_cron
+# 确保文件末尾有空行
+echo "" >> /tmp/current_cron
 
 crontab /tmp/current_cron
 rm -f /tmp/current_cron
@@ -303,6 +317,7 @@ rm -f /tmp/current_cron
 echo -e "${GREEN}定时任务已添加：${NC}"
 echo -e " - 异常监控: ${YELLOW}${MON_DESC}${NC} 执行一次 (${CRON_MON})"
 echo -e " - 每日播报: ${YELLOW}${REPORT_DESC}${NC} 执行一次 (${CRON_REPORT})"
+echo -e " - ${YELLOW}注意: 每日 00:00 - 07:00 期间已开启免打扰模式${NC}"
 
 # ---------------------------------------------------
 # 5. 执行测试
